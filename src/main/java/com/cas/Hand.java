@@ -18,7 +18,7 @@ public class Hand {
   protected Hand(@NonNull Collection<Card> cards) {
     this.cards = cards.stream().sorted(Card.COMPARE_CARD_VALUES).collect(Collectors.toList());
     this.map_CardValueWithMatchingCards = this.buildMapOfCards();
-    this.highCard = determineHighCard();
+    this.highCard = ((List<Card>) this.cards).get(4);
     this.highestRank = this.determineRank();
   }
 
