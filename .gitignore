@@ -10,8 +10,10 @@ Thumbs.db
 
 
 ./.idea
+./.idea/*
 *.iml
 
+.gitkeep
 
 ## Keys
 *.pem
