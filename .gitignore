@@ -100,3 +100,4 @@ Vagrantfile
 
 * Crash
 crash.log
+/.idea/
