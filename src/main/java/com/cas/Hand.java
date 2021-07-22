@@ -22,7 +22,6 @@ public class Hand {
     this.highestRank = this.determineRank();
   }
 
-  /** Sort the cards first based on their value, then merge to the map if needed. */
   protected Map<Integer, List<Card>> buildMapOfCards() {
     return this.cards.stream()
         .collect(Collectors.groupingBy(Card::getValueAsInt, Collectors.toList()));
@@ -52,16 +51,6 @@ public class Hand {
     if (null == cards)
       throw new NullPointerException("Unable to parse null hand in String[] method!");
     return newHand(Arrays.asList(cards));
-  }
-
-  /**
-   * Hands which do not fit any higher category are ranked by the value of their highest card.
-   *
-   * <p>If the highest cards have the same value, the hands are ranked by the next highest, and so
-   * on.
-   */
-  public Card determineHighCard() {
-    return PokerUtils.getHighCardFromCollection(this.cards);
   }
 
   /** 2 of the 5 cards in the hand have the same value. */
