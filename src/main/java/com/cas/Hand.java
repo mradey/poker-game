@@ -30,21 +30,25 @@ public class Hand {
 		return this.cards.stream().collect(Collectors.groupingBy(Card::getValueAsInt, Collectors.toList()));
 	}
 
-	public static Hand newHand(final Collection<String> cards) {
-		if (null == cards) {
-			throw new NullPointerException("Unable to parse null hand in List<String> method!");
-		} else if (cards.size() != 5)
-			throw new RuntimeException(String.format(
-					"Poker hand cannot be less than or greater than 5 cards! Size of hand parsed: [%s]", cards.size()
-			));
-		final List<Card> cardObjectList = new ArrayList<>();
-		for (String numberWithSuite : cards) {
-			String number = numberWithSuite.substring(0, 1);
-			String suite = numberWithSuite.substring(1);
-			cardObjectList.add(new Card(number, suite));
-		}
-		return new Hand(cardObjectList);
-	}
+  public static Hand newHand(final Collection<String> cards) {
+    if (null == cards)
+      throw new NullPointerException("Unable to parse null hand in List<String> method!");
+
+    final Set<Card> cardObjectList = new HashSet<>();
+    for (String numberWithSuite : cards) {
+      final String number = numberWithSuite.substring(0, 1);
+      final String suite = numberWithSuite.substring(1);
+      cardObjectList.add(new Card(number, suite));
+    }
+    // cardObjectList is a set, therefore any dupes will not be added
+    if (cards.size() != 5) {
+      throw new RuntimeException(
+          String.format(
+              "Poker hand cannot be less than or greater than 5 cards! Size of hand parsed: [%s]",
+              cards.size()));
+    }
+    return new Hand(cardObjectList);
+  }
 
 	public static Hand newHand(final String[] cards) {
 		if (null == cards)
