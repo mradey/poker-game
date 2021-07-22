@@ -30,9 +30,8 @@ import static com.cas.Rank.*;
  */
 public class PokerGame {
 
-	private static final Set<Rank> RANK_VALUE_SET_FOR_HIGH_CARDS = Set.of(
-			STRAIGHT_FLUSH, FLUSH, STRAIGHT, HIGH_CARD
-	);
+  private static final Set<Rank> RANK_VALUES_THAT_USE_HIGH_CARD_TO_DETERMINE_WINNER =
+      Set.of(STRAIGHT_FLUSH, FLUSH, STRAIGHT, HIGH_CARD);
 
 	private String playerWhoWon = null;
 	private String winningCondition = "";
