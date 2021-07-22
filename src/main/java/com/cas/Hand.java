@@ -27,15 +27,7 @@ public class Hand {
 	 * Sort the cards first based on their value, then merge to the map if needed.
 	 */
 	protected Map<Integer, List<Card>> buildMapOfCards() {
-		final Map<Integer, List<Card>> map = new LinkedHashMap<>();
-		this.cards.forEach(card ->
-				map.merge(card.getValueAsInt(),
-						new ArrayList<>(Arrays.asList(card)),
-						(s1, s2) -> {
-							s1.addAll(s2);
-							return s1;
-						}));
-		return map;
+		return this.cards.stream().collect(Collectors.groupingBy(Card::getValueAsInt, Collectors.toList()));
 	}
 
 	public static Hand newHand(final Collection<String> cards) {
