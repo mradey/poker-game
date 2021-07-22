@@ -263,9 +263,18 @@ public class PokerGame {
 		return winningHighCard;
 	}
 
-	// todo: I feel like I call this method a lot unnecessarily. Not seeing a better option at the moment though.
-	public final Integer getRankValueSumFromCollectionOfCards(final Collection<Card> cards) {
-		return cards.stream().mapToInt(Card::getValueAsInt).sum();
-	}
+  protected Card getHighCardFromCollection(final Collection<Card> cards) {
+    return cards.stream().max(Card.COMPARE_CARD_VALUES).orElse(new Card("1", "D"));
+  }
 
+  // todo: I feel like I call this method a lot unnecessarily. Not seeing a better option however
+  protected int getTotalValueFromCollection(final Collection<Card> cards) {
+    return cards.stream().mapToInt(Card::getValueAsInt).sum();
+  }
+
+  protected Card getNextHighestCard(final Card currentHighCard, final Collection<Card> cards) {
+    final Collection<Card> copiedCards = new ArrayList<>(cards);
+    copiedCards.remove(currentHighCard);
+    return this.getHighCardFromCollection(copiedCards);
+  }
 }
