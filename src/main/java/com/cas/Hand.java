@@ -28,12 +28,13 @@ public class Hand {
 	 */
 	protected Map<Integer, List<Card>> buildMapOfCards() {
 		final Map<Integer, List<Card>> map = new LinkedHashMap<>();
-		this.cards.forEach(card -> {
-			map.merge(card.getValueAsInt(), new ArrayList<>(Arrays.asList(card)), (s1, s2) -> {
-				s1.addAll(s2);
-				return s1;
-			});
-		});
+		this.cards.forEach(card ->
+				map.merge(card.getValueAsInt(),
+						new ArrayList<>(Arrays.asList(card)),
+						(s1, s2) -> {
+							s1.addAll(s2);
+							return s1;
+						}));
 		return map;
 	}
 

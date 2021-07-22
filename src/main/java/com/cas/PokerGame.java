@@ -1,8 +1,6 @@
 package com.cas;
 
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -104,7 +102,7 @@ public class PokerGame {
 	 * "...in decreasing order" is a bit ambiguous as my interpretation of it is either:
 	 * 1. check the next highest cards and compare those until one card is greater or,
 	 * 2. get the total value of the remaining cards and compare those
-	 *
+	 * <p>
 	 * I have implemented the latter method.
 	 */
 	private void handlePairs(final Hand blackHand,
