@@ -74,4 +74,9 @@ public class Card implements Comparable<Card> {
   public int compareTo(Card otherCard) {
     return Integer.compare(this.getValueAsInt(), otherCard.getValueAsInt());
   }
+
+  @Override
+  public String toString() {
+    return String.format("[%s of %s]", this.getFullNameFromValue(), this.getSuit());
+  }
 }
