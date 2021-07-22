@@ -7,7 +7,12 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
 /.idea
+/.idea/
+*.idea
+*.iml
 
 
 ## Keys
@@ -100,4 +105,3 @@ Vagrantfile
 
 * Crash
 crash.log
-/.idea/
