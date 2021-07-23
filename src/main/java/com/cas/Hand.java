@@ -1,41 +1,83 @@
 package com.cas;
 
-import lombok.Data;
-import lombok.NonNull;
-
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Data
 public class Hand {
+  private final List<CardCounts> sortedListCardCounts;
+  private final Set<String> suits;
 
-  @NonNull private final Collection<Card> cards;
-
-  private final Map<Integer, List<Card>> map_CardValueWithMatchingCards;
-  private final Card highCard;
-  private final Rank highestRank;
-
-  protected Hand(@NonNull Collection<Card> cards) {
-    this.cards = cards.stream().sorted(Card.COMPARE_CARD_VALUES).collect(Collectors.toList());
-    this.map_CardValueWithMatchingCards = this.buildMapOfCards();
-    this.highCard = ((List<Card>) this.cards).get(4);
-    this.highestRank = this.determineRank();
+  protected Hand(List<CardCounts> cardCounts, Set<String> suits) {
+    this.suits = suits;
+    this.sortedListCardCounts = cardCounts;
   }
 
-  protected Map<Integer, List<Card>> buildMapOfCards() {
-    return this.cards.stream()
-        .collect(Collectors.groupingBy(Card::getValueAsInt, Collectors.toList()));
+  public HandRank getHandRank() {
+    return new HandRank(getRank(), sortedListCardCounts);
   }
+  public Rank getRank() {
+    //check for flush and straight
+    boolean isFlush = isFlush();
+    boolean isStraight = isStraight();
+    if(isFlush && isStraight) return Rank.STRAIGHT_FLUSH;
+    if(isFlush) return Rank.FLUSH;
+    if(isStraight) return Rank.STRAIGHT;
+    return getRankFromCombo();
+  }
+
+  /*
+    1) if element 1 numCards = 4: its four of a kind with the 5th highest card being element 2
+    2) if element 1 numCards = 3:
+      a) if element 2 numCards = 2: full house
+      b) if element 2 numCards = 1: three of a kind with the 4th and 5th high cards being the next two elements in order
+    3) if element 1 numCards = 2:
+      a) if element 2 numCards = 2: two pair
+      b) if element 2 numCards = 1: pair with the next 3 elements representing the highest cards in order
+    4) the list is the high cards in order
+  */
+  public Rank getRankFromCombo() {
+    int highCardCount = sortedListCardCounts.get(0).count;
+    int highCardCount2 = sortedListCardCounts.get(1).count;
+    if(highCardCount == 4) return Rank.FOUR_OF_A_KIND;
+    if(highCardCount == 3) {
+      if(highCardCount2 == 2) return Rank.FULL_HOUSE;
+      else return Rank.THREE_OF_A_KIND;
+    }
+    if(highCardCount == 2) {
+      if(highCardCount2 == 2) return Rank.TWO_PAIRS;
+      else return Rank.PAIR;
+    }
+    return Rank.HIGH_CARD;
+  }
+
+  public boolean isFlush() {
+    return this.suits.size() == 1;
+  }
+
+  public boolean isStraight() {
+    if(sortedListCardCounts.size() != 5) return false;
+    return sortedListCardCounts.get(0).card.getValueAsInt() - sortedListCardCounts.get(4).card.getValueAsInt() == 4;
+  }
+  protected static List<CardCounts> buildSortedListOfCardCounts(Map<String, Integer> mapCardCounts) {
+    return mapCardCounts.entrySet().stream()
+      .map(ent-> new CardCounts(new Card(ent.getKey()), ent.getValue()))
+      .sorted()
+      .collect(Collectors.toList());
+  }
+
 
   public static Hand newHand(final Collection<String> cards) {
     if (null == cards)
       throw new NullPointerException("Unable to parse null hand in List<String> method!");
 
-    final Set<Card> cardObjectList = new HashSet<>();
+    Map<String, Integer> valueCounts = new HashMap<>();
+    Set<String> suits = new HashSet<>();
     for (String numberWithSuite : cards) {
       final String number = numberWithSuite.substring(0, 1);
       final String suite = numberWithSuite.substring(1);
-      cardObjectList.add(new Card(number, suite));
+      int val = valueCounts.containsKey(number) ? valueCounts.get(number) : 0;
+      valueCounts.put(number, val + 1);
+      if(!suits.contains(suite)) suits.add(suite);
     }
     // cardObjectList is a set, therefore any dupes will not be added
     if (cards.size() != 5) {
@@ -44,133 +86,7 @@ public class Hand {
               "Poker hand cannot be less than or greater than 5 cards! Size of hand parsed: [%s]",
               cards.size()));
     }
-    return new Hand(cardObjectList);
+    return new Hand(buildSortedListOfCardCounts(valueCounts), suits);
   }
 
-  public static Hand newHand(final String[] cards) {
-    if (null == cards)
-      throw new NullPointerException("Unable to parse null hand in String[] method!");
-    return newHand(Arrays.asList(cards));
-  }
-
-  /** 2 of the 5 cards in the hand have the same value. */
-  public boolean hasPair() {
-    return !this.getPairCards().isEmpty();
-  }
-
-  public List<Card> getPairCards() {
-    return this.getCardsForExpectedSize(2);
-  }
-
-  /** The hand contains 2 different pairs. */
-  public boolean hasTwoPairs() {
-    return this.getTwoPairsCards().size() == 2;
-  }
-
-  public List<List<Card>> getTwoPairsCards() {
-    List<List<Card>> list_twoPairs = new ArrayList<>();
-    for (Integer cardValue : this.map_CardValueWithMatchingCards.keySet()) {
-      if (map_CardValueWithMatchingCards.get(cardValue).size() == 2)
-        list_twoPairs.addAll(List.of(map_CardValueWithMatchingCards.get(cardValue)));
-    }
-    return list_twoPairs;
-  }
-
-  /** Three of the cards in the hand have the same value. */
-  public boolean hasThreeOfAKind() {
-    return !getThreeOfAKindCards().isEmpty();
-  }
-
-  public List<Card> getThreeOfAKindCards() {
-    return this.getCardsForExpectedSize(3);
-  }
-
-  /**
-   * Hand contains 5 cards with consecutive values.
-   *
-   * <p>Hands which both contain a straight are ranked by their highest card.
-   *
-   * <p>By using reduce, we can check if the second card's value minus 1 is equal to the first
-   * card's value.
-   *
-   * <p>Then, check if the final value is any other number than 1.
-   *
-   * <p>If 1, we use that as an indicator that there is a card value greater than the previous card
-   * value by more than 1.
-   */
-  public boolean hasStraight() {
-    if (this.map_CardValueWithMatchingCards.size() != 5) return false;
-    return this.map_CardValueWithMatchingCards.keySet().stream()
-            .reduce(
-                (card1Value, card2Value) -> {
-                  if (card1Value.compareTo(card2Value - 1) == 0) return card2Value;
-                  else return 1;
-                })
-            .get()
-        != 1;
-  }
-
-  /**
-   * Hand contains 5 cards of the same suit.
-   *
-   * <p>Hands which are both flushes are ranked using the rules for High Card.
-   */
-  public boolean hasFlush() {
-    return this.cards.stream().map(Card::getSuit).distinct().count() == 1;
-  }
-
-  /**
-   * 3 cards of the same value, with the remaining 2 cards forming a pair.
-   *
-   * <p>Ranked by the value oF the 3 cards.
-   */
-  public boolean hasFullHouse() {
-    return this.hasThreeOfAKind() && this.hasPair();
-  }
-
-  /** For the sake of simplicity, this does not check if hasFullHouse is true */
-  public List<Card> getFullHouseCards() {
-    return this.getCardsForExpectedSize(3);
-  }
-
-  /**
-   * 4 cards with the same value.
-   *
-   * <p>Ranked by the value of the 4 cards
-   */
-  public boolean hasFourOfAKind() {
-    return !getFourOfAKindCards().isEmpty();
-  }
-
-  public List<Card> getFourOfAKindCards() {
-    return getCardsForExpectedSize(4);
-  }
-
-  public List<Card> getCardsForExpectedSize(final int expectedSize) {
-    for (Map.Entry<Integer, List<Card>> entry : this.map_CardValueWithMatchingCards.entrySet()) {
-      if (entry.getValue().size() == expectedSize) return entry.getValue();
-    }
-    return Collections.emptyList();
-  }
-
-  /**
-   * 5 cards of the same suit with consecutive values.
-   *
-   * <p>Ranked by the highest card in the hand.
-   */
-  public boolean hasStraightFlush() {
-    return this.hasFlush() && this.hasStraight();
-  }
-
-  public Rank determineRank() {
-    if (this.hasStraightFlush()) return Rank.STRAIGHT_FLUSH;
-    else if (this.hasFourOfAKind()) return Rank.FOUR_OF_A_KIND;
-    else if (this.hasFullHouse()) return Rank.FULL_HOUSE;
-    else if (this.hasFlush()) return Rank.FLUSH;
-    else if (this.hasStraight()) return Rank.STRAIGHT;
-    else if (this.hasThreeOfAKind()) return Rank.THREE_OF_A_KIND;
-    else if (this.hasTwoPairs()) return Rank.TWO_PAIRS;
-    else if (this.hasPair()) return Rank.PAIR;
-    else return Rank.HIGH_CARD;
-  }
 }

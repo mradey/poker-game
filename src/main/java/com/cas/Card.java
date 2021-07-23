@@ -1,11 +1,8 @@
 package com.cas;
 
-import lombok.Data;
-
 import java.util.Comparator;
 import java.util.Map;
 
-@Data
 public class Card implements Comparable<Card> {
 
   public static final Comparator<Card> COMPARE_CARD_VALUES =
@@ -29,14 +26,17 @@ public class Card implements Comparable<Card> {
 
   private final String value;
   private final int valueAsInt;
-  private final Suit suit;
 
-  public Card(final String value, final String suit) {
+
+  public Card(final String value) {
     this.value = value.toUpperCase();
     this.valueAsInt = MAP_CARD_VALUES.getOrDefault(this.value, -1);
-    this.suit = Suit.valueOfLetter(suit);
   }
 
+  public int getValueAsInt() {
+    return valueAsInt;
+  }
+  
   public String getFullNameFromValue() {
     switch (this.value) {
       case "A":
@@ -77,6 +77,6 @@ public class Card implements Comparable<Card> {
 
   @Override
   public String toString() {
-    return String.format("[%s of %s]", this.getFullNameFromValue(), this.getSuit());
+    return " " + this.getFullNameFromValue() + " ";
   }
 }
